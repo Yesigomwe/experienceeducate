@@ -1,0 +1,40 @@
+name: QA Test Suite
+
+# Quality gate: runs on every PR targeting main, and blocks merge if tests fail.
+#
+# Note: this file alone only makes the job fail on red tests — GitHub Actions
+# can't block a merge from inside a workflow file. To make this an actual
+# Quality Gate on a real repo: Settings -> Branches -> Branch protection rules
+# -> add rule for `main` -> enable "Require status checks to pass before
+# merging" -> select "Run automated attendance API tests". See
+# docs/part3_framework_analysis.md for the full explanation.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    name: Run automated attendance API tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run test suite
+        run: python -m pytest tests/ -v
+
+  # In branch protection rules for `main`, mark "Run automated attendance API tests"
+  # as a required status check — this is what actually blocks the PR from merging
+  # if this job fails.
